@@ -35,19 +35,8 @@ class TriangleMesh:
             
         return matrice
     
-    def modelMatrix(self,scale,rotation, translation):
-        
-        # rotation_matrix = axisAngleToRotationMatrix(axis,angle)
-        # rotation_matrix_4x4 = np.eye(4)
-        # rotation_matrix_4x4[:3, :3] = rotation_matrix
-            
     
-        scale_matrix = [
-            [scale, 0, 0, 0],
-            [0, scale, 0, 0],
-            [0, 0, scale, 0],
-            [0, 0, 0, 1]
-        ]
+    def SetRotationMatrix(self,rotation): 
 
         rotation_matrix_x = [
             [1, 0, 0, 0],
@@ -73,6 +62,23 @@ class TriangleMesh:
             
         self.rotationMatrix = MatrixMultiplication(MatrixMultiplication(rotation_matrix_y,rotation_matrix_z),rotation_matrix_x)
 
+
+    def modelMatrix(self,scale, translation):
+        
+        # rotation_matrix = axisAngleToRotationMatrix(axis,angle)
+        # rotation_matrix_4x4 = np.eye(4)
+        # rotation_matrix_4x4[:3, :3] = rotation_matrix
+            
+    
+        scale_matrix = [
+            [scale, 0, 0, 0],
+            [0, scale, 0, 0],
+            [0, 0, scale, 0],
+            [0, 0, 0, 1]
+        ]
+        
+        
+
             
         translation_matrix = [
             [1, 0, 0, translation[0]],
@@ -82,6 +88,13 @@ class TriangleMesh:
         ]
 
         
-        self.modelMatrixRes = MatrixMultiplication(MatrixMultiplication(MatrixMultiplication(MatrixMultiplication(translation_matrix,rotation_matrix_y),rotation_matrix_z),rotation_matrix_x),scale_matrix)
+        self.modelMatrixRes = MatrixMultiplication(MatrixMultiplication(translation_matrix, self.rotationMatrix), scale_matrix)
         
         # return rotationMatrix,modelMatrix
+        
+    
+    def updateRotationMatrix(self, new_rotation_matrix):
+        self.rotationMatrix = new_rotation_matrix
+        scale_matrix = self.modelMatrixRes[0:4][0:4]  
+        translation_matrix = self.modelMatrixRes[0:4][0:4] 
+        self.modelMatrixRes = MatrixMultiplication(MatrixMultiplication(translation_matrix, self.rotationMatrix), scale_matrix)

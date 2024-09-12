@@ -96,17 +96,18 @@ def ExpMapToQuaternion(axis, angle):
     s = math.sin(angle / 2.0)
     c = math.cos(angle / 2.0)
     
-    qua = [
+    qua = [  
+        c,
         axis[0] * s,
         axis[1] * s,
         axis[2] * s,
-        c
+        
     ]
     
     return qua
 
 
-def quaternion_to_matrix(q):
+def QuatToMatrix(q):
     w, x, y, z = q
     matrix = [
         [1 - 2*y**2 - 2*z**2, 2*x*y - 2*z*w, 2*x*z + 2*y*w, 0],
@@ -117,21 +118,60 @@ def quaternion_to_matrix(q):
     
     return matrix
 
-def lerp_quaternions(q1, q2, t):
-    q1 = np.array(q1)
-    q2 = np.array(q2)
-    dot_product = np.dot(q1, q2)
-    if dot_product < 0.0:
-        q2 = -q2
-        dot_product = -dot_product
-    if dot_product > 0.95:
-        q = q1 + t * (q2 - q1)
-        q = q / np.linalg.norm(q)
-    else:
-        theta_0 = math.acos(dot_product)
-        theta = theta_0 * t
-        q2 = q2 - q1 * dot_product
-        q2 = q2 / np.linalg.norm(q2)
-        q = q1 * math.cos(theta) + q2 * math.sin(theta)
+
+
+def NormalizeQuat(quat):
+    length = math.sqrt(quat[0]**2 + quat[1]**2 + quat[2]**2 + quat[3]**2)
+    return [quat[0] / length, quat[1] / length, quat[2] / length, quat[3] / length]
+
+def QuatProduct(q1, q2):
+    return q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3]
+
+
+def SlerpQuat(q1, q2, t):
     
-    return q
+    product = QuatProduct(q1, q2)
+    
+    if product < 0.0:
+        q2 = Negation(q2,4)
+        product = -product
+        
+    if product > 0.995:
+        result = [
+            q1[0] + t * (q2[0] - q1[0]),
+            q1[1] + t * (q2[1] - q1[1]),
+            q1[2] + t * (q2[2] - q1[2]),
+            q1[3] + t * (q2[3] - q1[3])
+        ]
+        return NormalizeQuat(result)
+    
+    else:
+        theta = math.acos(product)
+        
+        s1 = math.sin((1 - t) * theta) / math.sin(theta)
+        s2 = math.sin(t * theta) / math.sin(theta)
+        
+        result = [
+            s1 * q1[0] + s2 * q2[0],
+            s1 * q1[1] + s2 * q2[1],
+            s1 * q1[2] + s2 * q2[2],
+            s1 * q1[3] + s2 * q2[3]
+        ]
+        
+        return result
+
+
+def QuaternionToAcardanAngles(q):
+
+    w, x, y, z = q
+    
+    # Rotation around X-axis (theta_x)
+    theta_x = math.atan2(2 * (w * x + y * z), 1 - 2 * (x**2 + y**2))
+    
+    # Rotation around Y-axis (theta_y)
+    theta_y = math.asin(2 * (w * y - z * x))
+    
+    # Rotation around Z-axis (theta_z)
+    theta_z = math.atan2(2 * (w * z + x * y), 1 - 2 * (y**2 + z**2))
+    
+    return [theta_x, theta_y, theta_z]

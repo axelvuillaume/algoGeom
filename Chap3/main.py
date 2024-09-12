@@ -80,6 +80,11 @@ def render_wireframe(screen, mesh, model_matrix, projection_matrix, viewport_mat
     debugRenderer.displayVector(rotation ,400,50, "rotation")
     debugRenderer.displayVector(target_angles ,400,150, "target rotation")
     debugRenderer.displayVector(quaternions, 600, 200, "quaternions")
+    
+    
+    
+    
+    # debugRenderer.displayMatrix(rotation_matrix3, 600, 300, "quaternions")
 
 
     
@@ -89,93 +94,126 @@ def render_wireframe(screen, mesh, model_matrix, projection_matrix, viewport_mat
 # transformedVertices = cubeMesh.transform(modelMatrix(2))
 # print(transformedVertices)
 
+
+
+
 font = pygame.font.Font(None, 15)
 debugRenderer = DebugRenderer(screen, font)
 scale= 1
 rotation = [0,0,0]
 translation = [0,0,0]
 animation_active = False  
-
-rotation_speed = 0.005
-target_angles = [0, 0, 0]
-
-
-target_matrix = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-t = 0
-animation_duration = 2
-threshold = 0.01
 animation_active_Exp = False
 
 
+target_angles = [0, 0, 0]
 
+animation_duration2 = 5
+
+t = 0
+
+target_quaternion = [1,0,0,0]
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = False  
     keys = pygame.key.get_pressed()
     if keys[pygame.K_SPACE]:
-        animation_active = True
+        # if not animation_active : 
+            animation_active = True
+            rotation2 = rotation[:]
+            t= 0
     if keys[pygame.K_p]:
-        animation_active_Exp = True
+        # if not animation_active_Exp :
+            animation_active_Exp = True
+            quaternions2 = quaternions[:]
+            t= 0
     if keys[pygame.K_UP]:
-        scale += 0.0001
+        scale += 0.001
     if keys[pygame.K_DOWN]:
-        scale -= 0.0001
+        scale -= 0.001
     if keys[pygame.K_q]:
-        translation[0] -= 0.001
+        translation[0] -= 0.01
     if keys[pygame.K_d]:
-        translation[0] += 0.001
+        translation[0] += 0.01
     if keys[pygame.K_z]:
-        translation[1] += 0.001
+        translation[1] += 0.01
     if keys[pygame.K_s]:
-        translation[1] -= 0.001
+        translation[1] -= 0.01
     if keys[pygame.K_m]:
-        translation[2] += 0.005
+        translation[2] += 0.05
     if keys[pygame.K_n]:
-        translation[2] -= 0.005
+        translation[2] -= 0.05
     if keys[pygame.K_KP0]:
-        rotation[0] += 0.001
+        rotation[0] += 0.01
     if keys[pygame.K_KP1]:
-        rotation[0] -= 0.001
+        rotation[0] -= 0.01
     if keys[pygame.K_KP2]:
-        rotation[1] += 0.001
+        rotation[1] += 0.01
     if keys[pygame.K_KP3]:
-        rotation[1] -= 0.001
+        rotation[1] -= 0.01
     if keys[pygame.K_KP4]:
-        rotation[2] += 0.001
+        rotation[2] += 0.01
     if keys[pygame.K_KP5]:
-        rotation[2] -= 0.001
+        rotation[2] -= 0.01
         
-
+    #lerp euler
     if animation_active : 
-        rotation = lerp_euler(rotation, target_angles, rotation_speed)
-        if all(math.isclose(r, 0, abs_tol=0.001) for r in rotation):
-            rotation = [0, 0, 0] 
+        t += 1.0 / 60.0 / animation_duration2
+        rotation = lerp_euler(rotation2, target_angles, t)
+        if t >= 1:
+            rotation = target_angles[:]
             animation_active = False
-        
+            t= 0
 
-    cubeMesh = TriangleMesh(vertices, faces)
-    cubeMesh.modelMatrix(scale, rotation, translation)
-    rotation_matrix = cubeMesh.rotationMatrix
-    model_matrix = cubeMesh.modelMatrixRes
     
     projection_matrix = Scene.projectionMatrix(-6, 6, -8, 8, -1, 1)
     viewport_matrix = Scene.viewportMatrix(0, 0, 800, 600,)
     
+    
+    
 
     # Orientation
+    cubeMesh = TriangleMesh(vertices, faces)
+    cubeMesh.SetRotationMatrix(rotation)
+    cubeMesh.modelMatrix(scale, translation)
+    
+    
+    rotation_matrix = cubeMesh.rotationMatrix
+    model_matrix = cubeMesh.modelMatrixRes
+
     euler = MatrixToEuler(rotation_matrix)
     exponentielMap = getExponentialMap(rotation_matrix)
+    
+    
     quaternions = ExpMapToQuaternion(exponentielMap[1],exponentielMap[0])
+    
+
+
     
     #LERP
     eulerMatrix = eulerToMatrix(euler[0],euler[1],euler[2])
-    TestMatric = ExpMapToMatrix(exponentielMap[0], exponentielMap[1])
+
+    if animation_active_Exp:
+        t += 1.0 / 60.0 / animation_duration2
+        quaternions = SlerpQuat(quaternions2, target_quaternion, t)
+        rotation = QuaternionToAcardanAngles(quaternions)
+        if t >= 1:
+            animation_active_Exp = False 
+            t=0
+
     
+
+        
+
+    # print(rotation_matrix3)
+    # print("2" ,quaternions)
+    
+            
     render_wireframe(screen, cubeMesh, model_matrix, projection_matrix, viewport_matrix)
     
 
-    clock.tick(3000)
+    clock.tick(60)
 
 pygame.quit()

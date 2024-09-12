@@ -11,7 +11,6 @@ def Magnitude(vector, size):
 def Negation(vector, size):
     for i in range(size):
         vector[i] = -vector[i]
-    
     return vector
 
 def Normalize(vector, size):
