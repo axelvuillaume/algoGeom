@@ -1,0 +1,6 @@
+# display settings
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+# start settings
+DEFAULT_STARTING_ALGO_INDEX = 0

@@ -1,0 +1,2 @@
+from .naiveTriangulation import naiveTriangulation
+from .slowDelaunay import slowDelaunay
