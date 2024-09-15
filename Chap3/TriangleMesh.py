@@ -15,7 +15,8 @@ class TriangleMesh:
         for v in self.vertices:
             vHomogeneous = CartToHom(v,3)
             transformedV = MatrixVectorMul(matrix,vHomogeneous,4)
-            transformed_vertices.append(transformedV[:3])
+            transformed_vertices.append(transformedV)
+        
         return transformed_vertices
 
 

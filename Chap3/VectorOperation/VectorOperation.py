@@ -97,6 +97,21 @@ def ScalarMulMatrix(matrix ,scalar) :
     return matrix
 
 
+
+def Matrix3Multiplication( matrix1, matrix2):
+    MatrixRes = [[0] * 3 for _ in range(3)]
+    
+    res = 0
+    for row in range(3):
+        for col in range(3):
+            res = 0
+            for k in range(3):
+                res += matrix1[row][k] * matrix2[k][col]
+            MatrixRes[row][col] = res
+       
+    
+    return MatrixRes
+
 def MatrixMultiplication( matrix1, matrix2):
     MatrixRes = [[0] * 4 for _ in range(4)]
     
@@ -126,6 +141,24 @@ def MatrixVectorMul ( matrix, vector,size):
     
     else :
         raise ValueError (" size pas egale a 4 ")
+    
+    
+        
+def MatrixVector3Mul ( matrix, vector,size):
+    vectorRes = []
+    if size == 3 :
+        col = 0
+        res = 0
+        for row in range(3):
+            for col in range(3):
+                res += vector[col] * matrix[row][col]
+            
+            vectorRes.append(res)
+            res = 0
+        return vectorRes
+    
+    else :
+        raise ValueError (" size pas egale a 3")
 
 def CartToHom (vector, size):
     if size == 3:
@@ -143,13 +176,48 @@ def HomToCart (vector, size):
             
             return vectorRes
         else:
-            raise ValueError ("vector[3] == 0")
+            return vector[:3]
     else:
         raise ValueError (" size != 4")
     
-def Inverse(matrix):
-        return "aled"
+def determinant_3x3(matrix):
+    return (
+        matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1]) -
+        matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0]) +
+        matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0])
+    )
+
+def minor(matrix, row, col):
+    return [ [matrix[r][c] for c in range(len(matrix[r])) if c != col] for r in range(len(matrix)) if r != row ]
+
+def determinant_4x4(matrix):
+    return (
+        matrix[0][0] * determinant_3x3(minor(matrix, 0, 0)) -
+        matrix[0][1] * determinant_3x3(minor(matrix, 0, 1)) +
+        matrix[0][2] * determinant_3x3(minor(matrix, 0, 2)) -
+        matrix[0][3] * determinant_3x3(minor(matrix, 0, 3))
+    )
+
+def cofactor(matrix):
+    cofactors = []
+    for r in range(4):
+        row = []
+        for c in range(4):
+            m = minor(matrix, r, c)
+            sign = (-1) ** (r + c)
+            row.append(sign * determinant_3x3(m))
+        cofactors.append(row)
+    return cofactors
+
+def transpose(matrix):
+    return [list(row) for row in zip(*matrix)]
+
+def inverse_matrix(matrix):
+    det = determinant_4x4(matrix)
+    if det == 0:
+        raise ValueError("La matrice est non inversible (déterminant = 0).")
     
-    
-def Determinant(matrix):
-    return "ouioui"
+    cofactors = cofactor(matrix)
+    adjugate = transpose(cofactors)
+    inverse = [[adjugate[r][c] / det for c in range(4)] for r in range(4)]
+    return inverse

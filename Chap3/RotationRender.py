@@ -31,7 +31,7 @@ def getExponentialMap(matrix):
         else:
             x, y, z = 0, 0, 0
         
-        return angle, [x, y, z]
+        return [angle, [x, y, z]]
 
 
     
@@ -174,4 +174,38 @@ def QuaternionToAcardanAngles(q):
     # Rotation around Z-axis (theta_z)
     theta_z = math.atan2(2 * (w * z + x * y), 1 - 2 * (y**2 + z**2))
     
+    return [theta_x, theta_y, theta_z]
+
+
+def matrixToAcardanAngles(rotation_matrix):
+    # On récupère les composantes de la matrice de rotation 3x3
+    r00 = rotation_matrix[0][0]
+    r01 = rotation_matrix[0][1]
+    r02 = rotation_matrix[0][2]
+    r10 = rotation_matrix[1][0]
+    r11 = rotation_matrix[1][1]
+    r12 = rotation_matrix[1][2]
+    r20 = rotation_matrix[2][0]
+    r21 = rotation_matrix[2][1]
+    r22 = rotation_matrix[2][2]
+
+    # Calcul des angles d'Acardan (en radians)
+    if r20 < 1:
+        if r20 > -1:
+            # Cas général
+            theta_y = math.asin(-r20)
+            theta_x = math.atan2(r21, r22)
+            theta_z = math.atan2(r10, r00)
+        else:
+            # Gimbal lock : theta_y = -pi/2
+            theta_y = math.pi / 2
+            theta_x = -math.atan2(-r01, r11)
+            theta_z = 0
+    else:
+        # Gimbal lock : theta_y = pi/2
+        theta_y = -math.pi / 2
+        theta_x = math.atan2(-r01, r11)
+        theta_z = 0
+
+    # Retourne les angles d'Acardan (ou les angles XYZ)
     return [theta_x, theta_y, theta_z]
