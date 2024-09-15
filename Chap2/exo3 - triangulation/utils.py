@@ -1,7 +1,7 @@
 import random
 from config import SCREEN_WIDTH, SCREEN_HEIGHT
 from const import RECT_SIZE, DOT_NUMBER
-from shapes import Dot
+from shapes import Dot, Triangle
 import math
 
 def is_left(A, B, P):
@@ -115,17 +115,35 @@ def FindCircumcenter(A,B,C):
     return circumcenter  
 
 
-def detectIllegalEdge(triangle1, dots, radius, center, listTriangle):
-    for dot in dots:
-        # icic provleme check c'est quoi triangles 1 truc de tuple
-        if dot not in triangle1:
-            distanceCenter = math.sqrt((center[0] - dot.center[0]) ** 2 + (center[1] - dot.center[1]) ** 2)
-            if distanceCenter < radius : 
-                for triangle in listTriangle:
-                    if triangle == triangle1:
-                        continue
+def detectIllegalEdge(triangle1, radius, center, listTriangle):
+    for triangle in listTriangle:
+        if triangle.triangle_dots != triangle1.triangle_dots:
+
+            common_points = list(set(triangle1.triangle_dots) & set(triangle.triangle_dots))
+            if len(common_points) == 2:
+
+                for dot in triangle.triangle_dots:
+                    if dot not in triangle1.triangle_dots:
+                        distanceCenter = math.sqrt((center[0] - dot.center[0]) ** 2 + (center[1] - dot.center[1]) ** 2)
+                        if distanceCenter < radius:
+                                  
+                            unique_point1 = [dot for dot in triangle1.triangle_dots if dot not in common_points][0]
+                            unique_point2 = [dot for dot in triangle.triangle_dots if dot not in common_points][0]
+                            
+                            unique_point1.selected =True
+                            unique_point2.selected =True
+
+                            new_triangle1 = Triangle([common_points[0], unique_point1, unique_point2])
+                            
+                            new_triangle1.selected =True
+                            new_triangle2 = Triangle([common_points[1], unique_point1, unique_point2])
+                            new_triangle2.selected = True
+                            
+                            
+    
+    
+                            return triangle1,triangle, new_triangle1, new_triangle2
+    return None,None,None,None
+
+
                     
-                    common_points = len(set(triangle1.triangle_dots) & set(triangle.triangle_dots))
-                    if common_points == 2:
-                        return True
-            return False

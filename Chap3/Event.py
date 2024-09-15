@@ -50,9 +50,9 @@ def handle_object_controls(keys, rotation, translation):
         translation[1] += vitesse_object
     if keys[pygame.K_s]:
         translation[1] -= vitesse_object
-    if keys[pygame.K_m]:
+    if keys[pygame.K_a]:
         translation[2] += vitesse_object
-    if keys[pygame.K_n]:
+    if keys[pygame.K_e]:
         translation[2] -= vitesse_object
     if keys[pygame.K_KP0]:
         rotation[0] += vitesse_object

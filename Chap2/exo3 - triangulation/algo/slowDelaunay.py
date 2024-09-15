@@ -21,9 +21,13 @@ class slowDelaunay :
         self.current_triangle = None
         self.centerCircum = []
         self. finalDots = []
+        self.new_triangle1 = None
+        self.new_triangle2 = None
 
         self.triangulation = []
-        self.triangulationFlip = []
+        self.i = 0
+        self.size = 0
+        self.finale_triangle = []
 
     def handle_events(self, event):
         # Gérer les clics de souris
@@ -52,10 +56,14 @@ class slowDelaunay :
         self.current_triangle = None
         
         self.centerCircum = []
-        self.triangulationFlip = []
         self.finalDots = []
 
         self.triangulation = []
+        self.i = 0
+        self.new_triangle1 = None
+        self.new_triangle2 = None
+        self.size = 0
+        self.finale_triangle = []
 
     def next_state(self):
         match self.current_state:
@@ -65,6 +73,7 @@ class slowDelaunay :
         self.current_state += 1
 
         match self.current_state:
+            
             case 1:
                 print("generate random dots")
                 self.dots = generate_random_dots()
@@ -88,6 +97,7 @@ class slowDelaunay :
                     B.selected = False
 
                     self.triangulation.append(Triangle([A, B, C]))
+                    self.finale_triangle = self.triangulation[:]
                     self.remaining_dots.remove(B)
                 if C is not None:
                     self.remaining_dots.remove(C)
@@ -113,35 +123,70 @@ class slowDelaunay :
                     B = self.current_triangle.triangle_dots[i]
                     C = self.current_triangle.triangle_dots[(i + 1) % len(self.current_triangle.triangle_dots)]
                     self.triangulation.append(Triangle([A, B, C]))
-                    self.triangulationFlip.append((A, B, C))
                     
                 self.triangulation.remove(self.current_triangle)
                 if len(self.remaining_dots) > 0:
                     self.current_state = 3
+                    
+                self.finale_triangle = self.triangulation[:]
+                print(len(self.finale_triangle))
+                print("test")
             case 7:
                 print("clean selected shapes")
                 self.current_triangle.selected = False
                 self.current_dot.selected = False
+                
             
             case 8:
-                triangle = self.triangulationFlip.pop()
-                A, B, C = triangle[0], triangle[1], triangle[2]
+                print("debut finale",len(self.finale_triangle))
+                self.i = len( self.triangulation)
+                print("debut",len(self.triangulation))
+                self.current_triangle = self.triangulation[self.i-1]
+                A, B, C =  self.current_triangle.triangle_dots[0],  self.current_triangle.triangle_dots[1],  self.current_triangle.triangle_dots[2]
                 centerT = FindCircumcenter(A, B, C)
                 radius = math.sqrt((centerT[0] - A.center[0]) ** 2 + (centerT[1] - A.center[1]) ** 2)
-                print(radius, centerT[0], centerT[1])
                 self.centerCircum.append(Circle(centerT, radius))
         
-                print(detectIllegalEdge(triangle,self.dots ,radius,centerT,self.triangulationFlip))
+    
+                hold_triangle1, hold_triangle2, self.new_triangle1, self.new_triangle2 = detectIllegalEdge(self.current_triangle ,radius,centerT,self.triangulation)
+                if self.new_triangle1 is not None and self.new_triangle2 is not None:
+                    self.triangulation.append(self.new_triangle1)
+                    self.triangulation.append(self.new_triangle2)
+                    self.triangulation.remove(hold_triangle1)
+                    self.triangulation.remove(hold_triangle2)
+                    
+                    
+                    self.finale_triangle.append(self.new_triangle1)
+                    self.finale_triangle.append(self.new_triangle2)
+                    self.finale_triangle.remove(hold_triangle1)
+                    self.finale_triangle.remove(hold_triangle2)
+                    
+                    print("in")
+                else :    
+                    self.triangulation.remove(self.current_triangle) 
+                       
+
+            
                 
-                if len(self.triangulationFlip) > 0:
+                print("apres",len(self.triangulation))
+                print("la",len(self.finale_triangle))
+                
+                
+            case 9:      
+                if len(self.triangulation) > 0 : 
                     self.current_state = 7
-                    
                 
-            case 9:
-              
-                    
-                print(len(self.triangulationFlip))
+                if self.new_triangle1 is not None :
+                    self.new_triangle1.triangle_dots[1].selected =  False
+                    self.new_triangle1.triangle_dots[2].selected =  False
+                    self.new_triangle1.selected =  False
+                    self.new_triangle2.selected =  False
+               
+                   
+                self.centerCircum.pop()
                 
+            case 10 :
+                print("FFDGFGDSFGSDFSDG")
             case _:
                 pass
 
@@ -156,7 +201,7 @@ class slowDelaunay :
         if (len(self.polygon_points) > 2):
             pygame.draw.polygon(self.screen, POLYGON_COLOR, self.polygon_points, POLYGON_LINE_WIDTH)
 
-        for triangle in self.triangulation:
+        for triangle in self.finale_triangle:
             triangle.draw(self.screen)
 
         for dot in self.dots:
