@@ -8,7 +8,7 @@ pygame.init()
 screen_width = 800
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption('Interactions avec Classes en Pygame')
+pygame.display.set_caption('Convexe / Concave')
 
 
 WHITE = (255, 255, 255)
@@ -16,34 +16,65 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 current_color = BLUE
-
-# Classe Point
+    
 class Point:
     def __init__(self, pos, radius):
         self.pos = pos  
-        self.radius = radius  
-        self.color = current_color  
+        self.radius = radius
+        self.statut = ""
 
     def draw(self, surface):
-        """Dessine le cercle sur la surface donnée."""
-        if self.pos:  # Vérifie si self.pos n'est pas None
+        if self.statut == 'in' :
+            self.color = BLUE
+        elif self.statut == 'out':
+            self.color = RED
+        else :
+            self.color = current_color
+            
+            
+        if self.pos:
             pygame.draw.circle(surface, self.color, self.pos, self.radius)
+            
+
 
 
 class Polygon:
     def __init__(self, points):
         self.points = points
-        self.color = current_color
+        self.selected = ""
         
-
     def draw(self, surface):
-        """Dessine le polygone sur la surface donnée."""
+        if self.selected == 'concave' :
+            self.color = BLUE
+        elif self.selected == 'convexe':
+            self.color = RED
+        else :
+            self.color = current_color
+            
         if len(self.points) > 2:
-            pygame.draw.polygon(surface, self.color, self.points)
+            pygame.draw.polygon(surface, self.color, self.points,2)
+            
+    def point_in_polygon_convexe(self, point):
+        num_vertices = len(self.points)
+        x, y = point[0], point[1]
+        
+        def cross_product(A, B, P):
+            return (B[0] - A[0]) * (P[1] - A[1]) - (B[1] - A[1]) * (P[0] - A[0])
 
-    def change_color(self, new_color):
-        """Change la couleur du polygone."""
-        self.color = new_color
+        # Initialiser le signe du premier produit vectoriel
+        A = self.points[0]
+        B = self.points[1]
+        initial_sign = cross_product(A, B, point) > 0
+        
+        # Vérifier pour chaque segment si le produit vectoriel a le même signe
+        for i in range(1, num_vertices):
+            A = self.points[i]
+            B = self.points[(i + 1) % num_vertices]
+            if (cross_product(A, B, point) > 0) != initial_sign:
+                return True
+
+        return False
+
         
     def point_in_polygon(self, point):
         count=0
@@ -53,12 +84,11 @@ class Polygon:
     
         p1 = self.points[0]
     
-        # Loop through each edge in the polygon
+        
         for i in range(1, num_vertices + 1):
-            # Get the next point in the polygon
+            
             p2 = self.points[i % num_vertices]
     
-            # Check if the point is above the minimum y coordinate of the edge
             if y > min(p1[1], p2[1]):
                 if y <= max(p1[1], p2[1]):
                     if x <= max(p1[0], p2[0]):
@@ -75,21 +105,9 @@ class Polygon:
             return inside
         else:
             return not inside
-        
-    # def is_convex(self):
-    #     bool = True
-    #     for i in range(len(self.points)):
-    #             u = (self.points[(i+2)%len(self.points)][0] - self.points[(i+1)%len(self.points)][0], self.points[(i+2)%len(self.points)][1] - self.points[(i+1)%len(self.points)][1])
-    #             v = (self.points[(i+1)%len(self.points)][0] - self.points[i][0], self.points[(i+1)%len(self.points)][1] - self.points[i][1])
 
-                
-    #             if (u[0]*v[1] - u[1]*v[0] < 0 ) : 
-    #                 print (u[0]*v[1] - u[1]*v[0])
-    #                 bool == False
-        
-    #     print (bool)
-    #     return bool
-    
+
+
     def is_convex(self):
         total_points_number = len(self.points)
         if (total_points_number > 2):
@@ -134,10 +152,9 @@ class App:
         self.poly = Polygon(self.sommets)
         
         self.posPoint = None
-        self.points = Point(self.posPoint, 10)
+        self.points = Point(self.posPoint, 5)
 
     def handle_events(self):
-        """Gère les événements du clavier et de la souris."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -145,30 +162,51 @@ class App:
                 if event.button == 1:
                     pos = pygame.mouse.get_pos()
                     self.sommets.append(pos)
-                    print (self.poly.is_convex())
+                    if self.poly.is_convex():
+                        self.poly.selected = 'convexe'
+                        print("Convexe")
+                    else: 
+                        self.poly.selected = 'concave'
+                        print("Concave")
                 elif event.button == 3:
                     self.posPoint = pygame.mouse.get_pos()
-                    self.points = Point(self.posPoint, 10)
-                    print(self.poly.point_in_polygon(self.posPoint))
+                    self.points = Point(self.posPoint, 5)
+                    
+                    if not self.poly.is_convex() :
+                        if self.poly.point_in_polygon(self.points.pos):
+                            self.points.statut = 'out'
+                            print("Crossing Method : Dehors")
+                        else: 
 
+                            self.points.statut = 'in'
+                            print("Crossing Method : Interieur")
+                            
+                    else :
+                        if self.poly.point_in_polygon_convexe(self.points.pos):
+                            self.points.statut = 'out'
+                            print("Orientation Method : Dehors")
+                        else: 
+
+                            self.points.statut = 'in'
+                            print("Orientation Method : Interieur")
+                        
+                        
     def run(self):
-        """Boucle principale de l'application."""
         while self.running:
-            # Gérer les événements
+            
             self.handle_events()
 
-            # Effacer l'écran
             screen.fill(WHITE)
 
-            # Dessiner le polygone
             self.poly.draw(screen)
             
             self.points.draw(screen)
-
-            # Rafraîchir l'écran
+                
+            for point in self.sommets:
+                pygame.draw.circle(screen, GREEN, point, 4)
+            
             pygame.display.flip()
 
-        # Quitter Pygame proprement
         pygame.quit()
         sys.exit()
 

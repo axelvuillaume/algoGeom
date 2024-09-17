@@ -1,7 +1,7 @@
 import random
 import sys
 from collections import OrderedDict
-from Chap2.NaiveAxel.utils import *
+from utils import *
 import pygame
 
 WHITE = (255, 255, 255)

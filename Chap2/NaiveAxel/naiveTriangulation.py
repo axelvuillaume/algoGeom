@@ -5,6 +5,3 @@ from Chap2.NaiveAxel.utils import *
 import pygame
 
 
-
-class naiveTriangulation:
-    

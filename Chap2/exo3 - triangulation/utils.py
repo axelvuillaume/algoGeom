@@ -17,11 +17,7 @@ def is_left(A, B, P):
     
     return current_result > 0
 
-def ccw(A, B, C):
-        return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
 
-def intersect(A, B, C, D):
-    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
 
 def generate_random_dots():
      dots = []
@@ -147,3 +143,138 @@ def detectIllegalEdge(triangle1, radius, center, listTriangle):
 
 
                     
+def addVoronoiEdges(triangle1, listTriangle, voronoi_edges):
+    centerT1 = FindCircumcenter(*triangle1.triangle_dots)
+    count = 0
+    for triangle in listTriangle:
+        if triangle != triangle1:
+
+            common_points = list(set(triangle1.triangle_dots) & set(triangle.triangle_dots))
+            
+            if len(common_points) == 2:
+                centerT2 = FindCircumcenter(*triangle.triangle_dots)
+                count += 1
+                voronoi_edges.append((centerT1, centerT2))    
+    print(count)
+    
+    # edges = [
+    #     (triangle1.triangle_dots[0], triangle1.triangle_dots[1]),
+    #     (triangle1.triangle_dots[1], triangle1.triangle_dots[2]),
+    #     (triangle1.triangle_dots[2], triangle1.triangle_dots[0])
+    # ]
+    
+    # boundary_size=1000
+        
+    # if count == 2 :
+        # for edge in edges:
+        #     if not has_shared_edge(edge, listTriangle):  # Fonction pour détecter si l'arête est partagée
+        #         # Calculer le vecteur normal à l'arête
+        #         p1, p2 = edge
+        #         edge_vector = [p2.center[0] - p1.center[0], p2.center[1] - p1.center[1]]
+        #         normal_vector = [-edge_vector[1], edge_vector[0]]  # Perpendiculaire à l'arête
+                
+        #         # Normaliser le vecteur normal
+        #         # length = math.sqrt(normal_vector[0] ** 2 + normal_vector[1] ** 2)
+        #         # normal_vector = [normal_vector[0] / length, normal_vector[1] / length]
+
+        #         # Tracer la ligne infinie en prolongeant dans la direction du vecteur normal
+        #         point_far = [
+        #             centerT1[0] + normal_vector[0] * boundary_size,
+        #             centerT1[1] + normal_vector[1] * boundary_size
+        #         ]
+        #         voronoi_edges.append((centerT1, point_far))
+                
+                
+def has_shared_edge(edge, listTriangle):
+    # L'arête est définie par deux points (p1, p2)
+    p1, p2 = edge
+
+    # Parcourir tous les triangles pour vérifier si l'arête est partagée
+    for triangle in listTriangle:
+        # Récupérer toutes les arêtes du triangle
+        edges = [
+            (triangle.triangle_dots[0], triangle.triangle_dots[1]),
+            (triangle.triangle_dots[1], triangle.triangle_dots[2]),
+            (triangle.triangle_dots[2], triangle.triangle_dots[0])
+        ]
+
+        # Vérifier si l'arête (p1, p2) existe dans le triangle
+        for e in edges:
+            # Les arêtes sont non orientées, donc on doit vérifier (p1, p2) et (p2, p1)
+            if (p1 == e[0] and p2 == e[1]) or (p1 == e[1] and p2 == e[0]):
+                return True
+
+    # Si aucune arête correspondante n'a été trouvée, alors elle n'est pas partagée
+    return False
+
+
+def lowest_dot(dots):
+    lowest = dots[0]
+    for dot in dots[1:]:
+        if dot.center[1] < lowest.center[1] or (dot.center[1] == lowest.center[1] and dot.center[0] < lowest.center[0]):
+            lowest = dot
+    return lowest
+
+def is_left(p1, p2, p3):
+    return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+def jarvis_march(dots):
+    # Trouver le point le plus bas
+
+
+    # Test si p3 est à gauche du segment (p1, p2)
+
+    hull = []
+
+    start = lowest_dot(dots)
+    point_on_hull = start
+
+    while True:
+        hull.append(point_on_hull)
+        # Sélectionner un point aléatoire pour commencer
+        endpoint = dots[0] if dots[0] != point_on_hull else dots[1]
+
+        for i in range(len(dots)):
+            # Si le point i est à gauche de la ligne courante, mettre à jour l'endpoint
+            if is_left(point_on_hull.center, endpoint.center, dots[i].center) > 0:
+                endpoint = dots[i]
+
+        point_on_hull = endpoint
+        if point_on_hull == start:
+            break
+
+    return hull
+
+
+
+def graham_scan(dots):
+    # Trouver le point le plus bas (ou le plus à gauche en cas d'égalité)
+    def lowest_dot(dots):
+        lowest = dots[0]
+        for dot in dots[1:]:
+            if dot.center[1] < lowest.center[1] or (dot.center[1] == lowest.center[1] and dot.center[0] < lowest.center[0]):
+                lowest = dot
+        return lowest
+
+    # Calcule le produit vectoriel pour déterminer l'orientation (test de rotation)
+    def cross_product(p1, p2, p3):
+        return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+    # Fonction pour trier les points par angle polaire
+    def polar_angle_sort(points, start):
+        def polar_angle(p):
+            dx, dy = p.center[0] - start.center[0], p.center[1] - start.center[1]
+            return math.atan2(dy, dx)  # atan2 donne l'angle polaire
+        return sorted(points, key=polar_angle)
+
+    # Initialisation
+    start = lowest_dot(dots)
+    sorted_dots = polar_angle_sort([dot for dot in dots if dot != start], start)
+    hull = [start]
+
+    for dot in sorted_dots:
+        while len(hull) > 1 and cross_product(hull[-2].center, hull[-1].center, dot.center) <= 0:
+            hull.pop()  # Retire les points avec des virages à droite
+        hull.append(dot)
+
+    return hull
