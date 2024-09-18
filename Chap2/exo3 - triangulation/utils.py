@@ -26,41 +26,44 @@ def generate_random_dots():
           dots.append(Dot(center))
      return dots
 
+def is_extrem_edge(dots, i, j):
+    is_positive = None
+    for (index, dot) in enumerate(dots):
+        if i == index or j == index:
+            continue
+        current_is_positive = is_left(dots[i].center, dots[j].center, dot.center) > 0
+        if is_positive is None:
+            is_positive = current_is_positive
+        elif is_positive != current_is_positive:
+            return False
+    return True
+
+def sort_extrem_edges(edges):
+    if not edges:
+        return []
+
+    sorted_edges = [edges.pop(0)]
+
+
+    while edges:
+        last_edge = sorted_edges[-1]
+
+        for index, edge in enumerate(edges):
+            if edge[0] == last_edge[1]:  
+                sorted_edges.append(edge)
+                edges.pop(index)
+                break
+            elif edge[1] == last_edge[1]:  
+                sorted_edges.append((edge[1], edge[0])) 
+                edges.pop(index)
+                break
+
+    return sorted_edges
+
+
 def get_convex_hull_points(dots):
-    def is_extrem_edge(dots, i, j):
-        is_positive = None
-        for (index, dot) in enumerate(dots):
-            if i == index or j == index:
-                continue
-            current_is_positive = is_left(dots[i].center, dots[j].center, dot.center) > 0
-            if is_positive is None:
-                is_positive = current_is_positive
-            elif is_positive != current_is_positive:
-                return False
-        return True
-    
-    def sort_extrem_edges(edges):
-        if not edges:
-            return []
-
-        sorted_edges = [edges.pop(0)]
 
 
-        while edges:
-            last_edge = sorted_edges[-1]
-
-            for index, edge in enumerate(edges):
-                if edge[0] == last_edge[1]:  
-                    sorted_edges.append(edge)
-                    edges.pop(index)
-                    break
-                elif edge[1] == last_edge[1]:  
-                    sorted_edges.append((edge[1], edge[0])) 
-                    edges.pop(index)
-                    break
-
-        return sorted_edges
-    
     extrem_edges = []
     
     for i in range(len(dots)):
@@ -211,7 +214,7 @@ def has_shared_edge(edge, listTriangle):
 def lowest_dot(dots):
     lowest = dots[0]
     for dot in dots[1:]:
-        if dot.center[1] < lowest.center[1] or (dot.center[1] == lowest.center[1] and dot.center[0] < lowest.center[0]):
+        if dot.center[1] > lowest.center[1] or (dot.center[1] == lowest.center[1] and dot.center[0] > lowest.center[0]):
             lowest = dot
     return lowest
 
@@ -245,27 +248,20 @@ def jarvis_march(dots):
 
     return hull
 
+def cross_product(p1, p2, p3):
+    return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
+
+
+def polar_angle_sort(points, start):
+    def polar_angle(p):
+        dx, dy = p.center[0] - start.center[0], p.center[1] - start.center[1]
+        return math.atan2(dy, dx)  # atan2 donne l'angle polaire
+    return sorted(points, key=polar_angle)
 
 
 def graham_scan(dots):
     # Trouver le point le plus bas (ou le plus à gauche en cas d'égalité)
-    def lowest_dot(dots):
-        lowest = dots[0]
-        for dot in dots[1:]:
-            if dot.center[1] < lowest.center[1] or (dot.center[1] == lowest.center[1] and dot.center[0] < lowest.center[0]):
-                lowest = dot
-        return lowest
 
-    # Calcule le produit vectoriel pour déterminer l'orientation (test de rotation)
-    def cross_product(p1, p2, p3):
-        return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
-
-    # Fonction pour trier les points par angle polaire
-    def polar_angle_sort(points, start):
-        def polar_angle(p):
-            dx, dy = p.center[0] - start.center[0], p.center[1] - start.center[1]
-            return math.atan2(dy, dx)  # atan2 donne l'angle polaire
-        return sorted(points, key=polar_angle)
 
     # Initialisation
     start = lowest_dot(dots)
