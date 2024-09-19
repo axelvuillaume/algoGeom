@@ -125,6 +125,7 @@ def detectIllegalEdge(triangle1, radius, center, listTriangle):
                     if dot not in triangle1.triangle_dots:
                         distanceCenter = math.sqrt((center[0] - dot.center[0]) ** 2 + (center[1] - dot.center[1]) ** 2)
                         if distanceCenter < radius:
+                            print("oui")
                                   
                             unique_point1 = [dot for dot in triangle1.triangle_dots if dot not in common_points][0]
                             unique_point2 = [dot for dot in triangle.triangle_dots if dot not in common_points][0]
@@ -158,7 +159,7 @@ def addVoronoiEdges(triangle1, listTriangle, voronoi_edges):
                 centerT2 = FindCircumcenter(*triangle.triangle_dots)
                 count += 1
                 voronoi_edges.append((centerT1, centerT2))    
-    print(count)
+    # print(count)
     
     # edges = [
     #     (triangle1.triangle_dots[0], triangle1.triangle_dots[1]),

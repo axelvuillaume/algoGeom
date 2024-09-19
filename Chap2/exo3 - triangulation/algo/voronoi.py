@@ -30,6 +30,10 @@ class voronoi :
         self.finale_triangle = []
         self.voronoi_dots = []
         self.voronoi_edges = []
+        self.Circum = None
+        self.triangleEdges = 0
+        self.triangle = 0
+        self.centerT = None
 
     def handle_events(self, event):
         # Gérer les clics de souris
@@ -49,28 +53,28 @@ class voronoi :
     
     def reset(self):
         self.current_state = 0
-
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
         self.remaining_dots = set()
         self.current_dot = None
         self.current_triangle = None
-        
         self.centerCircum = []
-        self.finalDots = []
+        self. finalDots = []
+        self.new_triangle1 = None
+        self.new_triangle2 = None
 
         self.triangulation = []
         self.i = 0
-        self.new_triangle1 = None
-        self.new_triangle2 = None
         self.size = 0
         self.finale_triangle = []
-        
-        
         self.voronoi_dots = []
-        self.voronoi_edges =[]
-
+        self.voronoi_edges = []
+        self.Circum = None
+        self.triangleEdges = 0
+        self.triangle = 0
+        self.centerT = None
+        
     def next_state(self):
         match self.current_state:
             case _:
@@ -152,12 +156,14 @@ class voronoi :
                 self.centerCircum.append(Circle(centerT, radius))
         
     
-                hold_triangle1, hold_triangle2, self.new_triangle1, self.new_triangle2 = detectIllegalEdge(self.current_triangle ,radius,centerT,self.triangulation)
+                hold_triangle1, hold_triangle2, self.new_triangle1, self.new_triangle2 = detectIllegalEdge(self.current_triangle ,radius,centerT,self.finale_triangle)
                 if self.new_triangle1 is not None and self.new_triangle2 is not None:
                     self.triangulation.append(self.new_triangle1)
                     self.triangulation.append(self.new_triangle2)
-                    self.triangulation.remove(hold_triangle1)
-                    self.triangulation.remove(hold_triangle2)
+                    if hold_triangle1 in self.triangulation:
+                            self.triangulation.remove(hold_triangle1)
+                    if hold_triangle2 in self.triangulation:
+                        self.triangulation.remove(hold_triangle2)   
                     
                     
                     self.finale_triangle.append(self.new_triangle1)
@@ -166,7 +172,7 @@ class voronoi :
                     self.finale_triangle.remove(hold_triangle2)
                 
                 else :    
-                    self.voronoi_dots.append(Dot(centerT))
+                    # self.voronoi_dots.append(Dot(centerT))
                     self.triangulation.remove(self.current_triangle) 
                 
             case 9:      
@@ -186,16 +192,44 @@ class voronoi :
 
                 
             case 10 :
-                print("FFDGFGDSFGSDFSDG")
                 
-                for triangle in self.finale_triangle:
-                    addVoronoiEdges(triangle, self.finale_triangle, self.voronoi_edges)
+                # for triangle in self.finale_triangle:
+                triangle = self.finale_triangle[self.triangle]
+                centerT = FindCircumcenter(*triangle.triangle_dots)
+                radius = math.sqrt((centerT[0] - triangle.triangle_dots[0].center[0]) ** 2 + (centerT[1] - triangle.triangle_dots[0].center[1]) ** 2)
+                self.voronoi_dots.append(Dot(centerT))
+                self.Circum = Circle(centerT, radius)
                     
-                print(self.voronoi_edges)
                     
-                # print(self.voronoi_edges)
-                # print([self.voronoi_edges[0][0], self.voronoi_edges[0][1]]) 
+            case 11 :
+                if self.triangle < len(self.finale_triangle)-1 :
+                      self.triangle += 1
+                      self.current_state = 9
+                else : 
+                    self.Circum = None
+            case 12 :
+                triangle = self.finale_triangle[self.triangleEdges]
+                self.centerT = Dot(FindCircumcenter(*triangle.triangle_dots))
+                self.centerT.selected = True
+                addVoronoiEdges(triangle, self.finale_triangle, self.voronoi_edges)
+   
+            
+                        
+                        
+            case 13 : 
+                
+            
+                if self.triangleEdges < len(self.finale_triangle)-1 :
+                    self.triangleEdges += 1
+                    self.current_state = 11
+                
+                self.centerT.selected = False
+          
                     
+            case 14 : 
+                print("FINI")
+                    
+                        
             case _:
                 pass
 
@@ -220,9 +254,19 @@ class voronoi :
         for circle in self.centerCircum :
             circle.draw(self.screen)
 
-        for dot in self.voronoi_dots :
-            dot.draw(self.screen)
             
         for line in self.voronoi_edges :
             # print(line)
             pygame.draw.lines(self.screen, WHITE,False, line, 2)
+            
+            
+        for dot in self.voronoi_dots :
+            dot.draw(self.screen)
+            
+            
+        if self.Circum : 
+            self.Circum.draw(self.screen)
+            
+            
+        if self.centerT :
+            self.centerT.draw(self.screen)

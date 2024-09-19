@@ -47,21 +47,19 @@ class slowDelaunay :
     
     def reset(self):
         self.current_state = 0
-
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
         self.remaining_dots = set()
         self.current_dot = None
         self.current_triangle = None
-        
         self.centerCircum = []
-        self.finalDots = []
+        self. finalDots = []
+        self.new_triangle1 = None
+        self.new_triangle2 = None
 
         self.triangulation = []
         self.i = 0
-        self.new_triangle1 = None
-        self.new_triangle2 = None
         self.size = 0
         self.finale_triangle = []
 
@@ -129,8 +127,7 @@ class slowDelaunay :
                     self.current_state = 3
                     
                 self.finale_triangle = self.triangulation[:]
-                print(len(self.finale_triangle))
-                print("test")
+
             case 7:
                 print("clean selected shapes")
                 self.current_triangle.selected = False
@@ -138,9 +135,7 @@ class slowDelaunay :
                 
             
             case 8:
-                print("debut finale",len(self.finale_triangle))
                 self.i = len( self.triangulation)
-                print("debut",len(self.triangulation))
                 self.current_triangle = self.triangulation[self.i-1]
                 A, B, C =  self.current_triangle.triangle_dots[0],  self.current_triangle.triangle_dots[1],  self.current_triangle.triangle_dots[2]
                 centerT = FindCircumcenter(A, B, C)
@@ -148,29 +143,28 @@ class slowDelaunay :
                 self.centerCircum.append(Circle(centerT, radius))
         
     
-                hold_triangle1, hold_triangle2, self.new_triangle1, self.new_triangle2 = detectIllegalEdge(self.current_triangle ,radius,centerT,self.triangulation)
+                hold_triangle1, hold_triangle2, self.new_triangle1, self.new_triangle2 = detectIllegalEdge(self.current_triangle ,radius,centerT,self.finale_triangle)
                 if self.new_triangle1 is not None and self.new_triangle2 is not None:
                     self.triangulation.append(self.new_triangle1)
                     self.triangulation.append(self.new_triangle2)
-                    self.triangulation.remove(hold_triangle1)
-                    self.triangulation.remove(hold_triangle2)
-                    
+                    if hold_triangle1 in self.triangulation:
+                        self.triangulation.remove(hold_triangle1)
+                    if hold_triangle2 in self.triangulation:
+                        self.triangulation.remove(hold_triangle2)                    
                     
                     self.finale_triangle.append(self.new_triangle1)
                     self.finale_triangle.append(self.new_triangle2)
                     self.finale_triangle.remove(hold_triangle1)
                     self.finale_triangle.remove(hold_triangle2)
                     
-                    print("in")
+  
                 else :    
                     self.triangulation.remove(self.current_triangle) 
                        
 
             
                 
-                print("apres",len(self.triangulation))
-                print("la",len(self.finale_triangle))
-                
+
                 
             case 9:      
                 if len(self.triangulation) > 0 : 

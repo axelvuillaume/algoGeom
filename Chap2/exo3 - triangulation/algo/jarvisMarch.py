@@ -40,12 +40,16 @@ class jarvisMarch:
                 self.next_state()
     
     def reset(self):
-        self.current_state = 0
 
+        self.current_state = 0
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
-
+        self.point_on_hull = None
+        self.start =None
+        self.endpoint = None
+        self.test_point = None
+        self.i = 0
 
     def next_state(self):
         match self.current_state:

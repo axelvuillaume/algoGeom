@@ -41,13 +41,15 @@ class extremeEdges:
     
     def reset(self):
         self.current_state = 0
-
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
-        self.remaining_dots = set()
         self.extrem_edges = []
-        self.colorBon = 0
+        self.i = 0
+        self.j = 0
+        self.edge = 0
+        self.sorted_edges = []
+        self.colorBon = WHITE
 
 
     def next_state(self):

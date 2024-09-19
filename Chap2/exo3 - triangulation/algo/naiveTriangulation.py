@@ -40,13 +40,14 @@ class naiveTriangulation:
     
     def reset(self):
         self.current_state = 0
-
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
         self.remaining_dots = set()
         self.current_dot = None
         self.current_triangle = None
+
+        self.triangulation = []
 
         self.triangulation = []
 

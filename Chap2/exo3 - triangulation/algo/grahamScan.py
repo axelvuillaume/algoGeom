@@ -40,12 +40,19 @@ class grahamScan:
                 self.next_state()
     
     def reset(self):
+
         self.current_state = 0
+
 
         self.dots = []
         self.convex_hull_dots = []
         self.polygon_points = []
-
+        self.hull = []
+        self.start =None
+        self.endpoint = None
+        self.test_point = None
+        self.sorted_dots = []
+        self.i = 0
 
     def next_state(self):
         match self.current_state:
