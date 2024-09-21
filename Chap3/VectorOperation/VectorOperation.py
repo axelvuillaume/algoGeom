@@ -14,12 +14,13 @@ def Negation(vector, size):
     return vector
 
 def Normalize(vector, size):
+    magni = Magnitude(vector, size)
     res = []
-    if Magnitude(vector, size) == 0:
+    if magni == 0:
         return [0]*size
     else :
         for i in range(size):
-            res.append(vector[i]/ Magnitude(vector, size))
+            res.append(vector[i]/ magni)
         return res
 
 

@@ -40,6 +40,16 @@ faces = [
     [1, 2, 6], [6, 5, 1]  # Face droite
 ]
 
+identity_matrice = [
+    [1,0,0,0],
+    [0,1,0,0],
+    [0,0,1,0],
+    [0,0,0,1],
+    ]
+
+
+light_direction = [0, 0, -1]
+
 # Default
 # faces = [
 #     [0, 1, 2], [2, 3, 0], # Face avant
@@ -50,7 +60,7 @@ faces = [
 #     [1, 2, 6], [6, 5, 1]  # Face droite
 # ]
 
-light_direction = [0, 0, -1]
+
 
 def calculate_normal(v0, v1, v2):
     edge1 = Subtraction(v1, 3, v0,3)
@@ -61,12 +71,12 @@ def calculate_normal(v0, v1, v2):
 
 
 def diffuse_light_intensity(normal, light_direction):
-    return max(0, DotProduct(normal,3, Negation(light_direction,3),3))
+    return max(0, DotProduct(normal,3, light_direction,3))
 
 
 
 def apply_lighting_to_color(base_color, intensity):
-    return [min(255, int(255 * intensity)) for c in base_color]
+    return  [min(255, int(c * (intensity*0.8 + 0.2))) for c in base_color]
 
 
 def apply_transformations(mesh,view_matrix,model_matrix, projection_matrix, viewport_matrix):
@@ -78,12 +88,10 @@ def apply_transformations(mesh,view_matrix,model_matrix, projection_matrix, view
         v_transformed = MatrixVectorMul(view_matrix,v,4)
 
         v_projected = MatrixVectorMul(projection_matrix,v_transformed,4)
-                
-        v_projected = HomToCart(v_projected,4)
-        v_projected.append(1)
-        
+ 
         v_result = MatrixVectorMul(viewport_matrix,v_projected,4)
-     
+        v_result = HomToCart(v_result,4)
+        
         projected_vertices.append(v_result[:3])
         
     return projected_vertices
@@ -114,16 +122,11 @@ def draw_world_axes(screen, view_matrix, projection_matrix, viewport_matrix):
         pygame.draw.line(screen, color, (start_result[0], start_result[1]), (end_result[0], end_result[1]), 2)
 
   
-def project_point(point, view_matrix, projection_matrix, viewport_matrix):
-    point_homogeneous = point + [1]  # (x, y, z, 1)
-    transformed = MatrixVectorMul(view_matrix, point_homogeneous, 4)
-    projected = MatrixVectorMul(projection_matrix, transformed, 4)
-    projected = HomToCart(projected,4)
-    projected.append(1)
-        
-    v_result = MatrixVectorMul(viewport_matrix,projected,4)
+def project_point(point, viewport_matrix):
+    point_homogeneous = point + [0]
+    v_result = MatrixVectorMul(viewport_matrix,point_homogeneous,4)
      
-    return HomToCart(v_result, 4)  # Retire le dernier élément
+    return v_result[:3]
   
 
 
@@ -132,53 +135,33 @@ def project_point(point, view_matrix, projection_matrix, viewport_matrix):
 def render_wireframe(screen, mesh,view_matrix, model_matrix, projection_matrix, viewport_matrix, light_direction):
 
     screen.fill(BLACK)
-    
-    
-    def is_within_bounds(point):
-        return 0 <= point[0] <= screen_width and 0 <= point[1] <= screen_height
-
-
-
-
-
     projected_vertices = apply_transformations(mesh,view_matrix, model_matrix, projection_matrix, viewport_matrix)    # if len(projected_vertices)  == 4 :
-        
-    camera_direction = [0, 0, 0] 
-    
+    transformed_vertices = mesh.transform(model_matrix)
+
     for face in mesh.faces:
-        v0 = projected_vertices[face[0]]
-        v1 = projected_vertices[face[1]]
-        v2 = projected_vertices[face[2]]
+        v0 = transformed_vertices[face[0]]
+        v1 = transformed_vertices[face[1]]
+        v2 = transformed_vertices[face[2]]  
         
         normal = calculate_normal(v0, v1, v2)
+        normal = Normalize(normal,3)
+        light_direction_final = Normalize(light_direction,3)
+        view_direction = Subtraction(v0, 3, camera_position, 3)
         
-        # center = [(v0[i] + v1[i] + v2[i]) / 3 for i in range(3)]
-        # normal_length = 2  # Longueur de la normale à dessiner
-        # normal_end = [center[i] + normal[i] * normal_length for i in range(3)]
-        # center_2d = project_point(center, view_matrix, projection_matrix, viewport_matrix)
-        # normal_end_2d = project_point(normal_end, view_matrix, projection_matrix, viewport_matrix)
-        # pygame.draw.line(screen, GREEN, (center_2d[0], center_2d[1]), (normal_end_2d[0], normal_end_2d[1]), 2)
-    
-        view_direction = Subtraction(v0, 3, camera_direction, 3)
         if DotProduct(normal, 3, view_direction, 3) <= 0:
-                
-            intensity = diffuse_light_intensity(normal, light_direction)
+            intensity = diffuse_light_intensity(normal, light_direction_final)
             color = apply_lighting_to_color([255, 255, 255], intensity)
-
-
-
-            if is_within_bounds(v0) and is_within_bounds(v1) and is_within_bounds(v2):
-                pygame.draw.polygon(screen, [255, 255, 255], [(v0[0], v0[1]), (v1[0], v1[1]), (v2[0], v2[1])])
-                
             
-
-
+            v0 = projected_vertices[face[0]]
+            v1 = projected_vertices[face[1]]
+            v2 = projected_vertices[face[2]]
+        
+            pygame.draw.polygon(screen, color, [(v0[0], v0[1]), (v1[0], v1[1]), (v2[0], v2[1])])
+                
             pygame.draw.line(screen, RED, (v0[0], v0[1]), (v1[0], v1[1]), 2)
             pygame.draw.line(screen,RED, (v1[0], v1[1]), (v2[0], v2[1]), 2)
             pygame.draw.line(screen, RED, (v2[0], v2[1]), (v0[0], v0[1]), 2)
         
-
-
     debugRenderer.displayMatrix(rotation_matrix, 50, 50, "Matrice de Rotation")
     debugRenderer.displayMatrix(model_matrix, 50, 200, "Matrice de Modèle")
     debugRenderer.displayVector(euler, 50, 350, "Euler")
@@ -275,7 +258,7 @@ while running:
         projection = "projection : Orthograpic"
     else :
         projection = "projection : Perspective"
-        projection_matrix = Scene.projectionMatrixPersp(math.radians(70),0.1,100,800/600)
+        projection_matrix = Scene.projectionMatrixPersp(math.radians(70),0.1,100,600/800)
     
     
     view_matrix = Scene.viewMatrix(v1, v2, v3, camera_position)

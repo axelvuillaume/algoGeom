@@ -22,9 +22,9 @@ class Scene:
         ]
         
         translation_matrix = [
-            [1, 0, 0, camera_position[0]],
+            [1, 0, 0, -camera_position[0]],
             [0, 1, 0, -camera_position[1]],
-            [0, 0, 1, camera_position[2]],
+            [0, 0, 1, -camera_position[2]],
             [0, 0, 0, 1]
         ]
         
