@@ -21,10 +21,10 @@ def rotate_vector(v, angle, axis):
     return MatrixVector3Mul(rotation_matrix, v,3)
 
 def handle_camera_controls(keys, camera_position, v1, v2, v3,camera_sensitivity):
-    if keys[pygame.K_e]:
+    if keys[pygame.K_z]:
           camera_position[2] += 0.1
         # move_camera(camera_position, v3, -camera_sensitivity)  # Déplace la caméra vers la gauche
-    if keys[pygame.K_a]:
+    if keys[pygame.K_s]:
         camera_position[2] -= 0.1
         # move_camera(camera_position, v3, camera_sensitivity)  # Déplace la caméra vers la gauche
     if keys[pygame.K_q]:
@@ -33,14 +33,14 @@ def handle_camera_controls(keys, camera_position, v1, v2, v3,camera_sensitivity)
     if keys[pygame.K_d]:
         camera_position[0] -= 0.1
         # move_camera(camera_position, v1, camera_sensitivity)   # Déplace la caméra vers la droite
-    if keys[pygame.K_z]:
+    if keys[pygame.K_a]:
         camera_position[1] += 0.1
         # move_camera(camera_position, v2, -camera_sensitivity)   # Déplace la caméra en avant
-    if keys[pygame.K_s]:
+    if keys[pygame.K_e]:
         camera_position[1] -= 0.1
         # move_camera(camera_position, v2, camera_sensitivity)  # Déplace la caméra en arrière
     
-vitesse_object = 0.1
+vitesse_object = 0.05
 def handle_object_controls(keys, rotation, translation):
     if keys[pygame.K_q]:
         translation[0] -= vitesse_object

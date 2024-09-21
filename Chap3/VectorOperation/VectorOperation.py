@@ -59,15 +59,15 @@ def DotProduct(vector1, size1, vector2,size2):
             vectorRes += vector1[i] * vector2[i]
         
         if vectorRes == 0 :
-            print("perpendicular")
+            # print("perpendicular")
             return vectorRes
         
         elif vectorRes < 0 :
-            print("opposite direction")
+            # print("opposite direction")
             return vectorRes
         
         elif vectorRes > 0 :
-            print("same direction")
+            # print("same direction")
             return vectorRes
         
     else:
