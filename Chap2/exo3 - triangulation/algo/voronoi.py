@@ -187,10 +187,6 @@ class voronoi :
                    
                 self.centerCircum.pop()
                 
-                
-
-
-                
             case 10 :
                 
                 # for triangle in self.finale_triangle:
@@ -211,22 +207,20 @@ class voronoi :
                 triangle = self.finale_triangle[self.triangleEdges]
                 self.centerT = Dot(FindCircumcenter(*triangle.triangle_dots))
                 self.centerT.selected = True
-                addVoronoiEdges(triangle, self.finale_triangle, self.voronoi_edges)
-   
-            
+                addVoronoiEdges(triangle, self.finale_triangle, self.voronoi_edges)         
                         
-                        
-            case 13 : 
-                
-            
+            case 13 :
                 if self.triangleEdges < len(self.finale_triangle)-1 :
                     self.triangleEdges += 1
                     self.current_state = 11
                 
                 self.centerT.selected = False
-          
+
                     
             case 14 : 
+                self.finale_triangle = []
+                self.polygon_points = []
+                self.voronoi_dots = []
                 print("FINI")
                     
                         

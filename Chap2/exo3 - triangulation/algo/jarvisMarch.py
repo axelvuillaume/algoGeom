@@ -79,11 +79,6 @@ class jarvisMarch:
                 self.test_point.selected = True
                 if is_left(self.point_on_hull.center, self.endpoint.center, self.dots[self.i].center) > 0:
                     self.endpoint = self.dots[self.i]
-                    
-                    
-                    
-                        
-            
             
             case 5 :
                 print("transit 5")

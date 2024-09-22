@@ -61,6 +61,80 @@ light_direction = [0, 0, -1]
 # ]
 
 
+def screen_to_world_ray(mouse_x, mouse_y, view_matrix, projection_matrix, viewport_matrix):
+    # Normaliser les coordonnées de la souris (en espace NDC [-1, 1])
+    x_ndc = 2 * mouse_x / screen_width - 1
+    y_ndc = 1 - 2 * mouse_y / screen_height
+    
+    ray_clip = [x_ndc, y_ndc, -1, 1]
+    
+    # Inverser la matrice de projection pour obtenir le rayon en espace caméra
+    ray_eye = MatrixVectorMul(inverse_matrix(projection_matrix), ray_clip, 4)
+    ray_eye = [ray_eye[0], ray_eye[1], -1, 0]  # On ignore le composant w
+
+    # Inverser la matrice de vue pour obtenir le rayon en espace monde
+    ray_world = MatrixVectorMul(inverse_matrix(view_matrix), ray_eye, 4)
+    ray_world = Normalize(ray_world[:3], 3)  # Normaliser le vecteur
+
+    return ray_world
+
+def ray_triangle_intersection(ray_origin, ray_dir, v0, v1, v2):
+    epsilon = 1e-6
+    edge1 = Subtraction(v1, 3, v0, 3)
+    edge2 = Subtraction(v2, 3, v0, 3)
+    h = CrossProduct(ray_dir, 3, edge2, 3)
+    a = DotProduct(edge1, 3, h, 3)
+    
+    if -epsilon < a < epsilon:
+        return False, None  # Le rayon est parallèle au triangle
+    
+    f = 1.0 / a
+    s = Subtraction(ray_origin, 3, v0, 3)
+    u = f * DotProduct(s, 3, h, 3)
+    
+    if u < 0.0 or u > 1.0:
+        return False, None
+    
+    q = CrossProduct(s, 3, edge1, 3)
+    v = f * DotProduct(ray_dir, 3, q, 3)
+    
+    if v < 0.0 or u + v > 1.0:
+        return False, None
+    
+    t = f * DotProduct(edge2, 3, q, 3)
+    
+    if t > epsilon:  # Il y a intersection
+        intersection_point = [ray_origin[i] + ray_dir[i] * t for i in range(3)]
+        return True, intersection_point
+    
+    return False, None
+
+
+def highlight_triangle_and_show_coordinates(screen, mesh, view_matrix, model_matrix, projection_matrix, viewport_matrix, mouse_pos):
+    ray_dir = screen_to_world_ray(mouse_pos[0], mouse_pos[1], view_matrix, projection_matrix, viewport_matrix)
+    ray_origin = camera_position
+
+    transformed_vertices = apply_transformations(mesh, view_matrix, model_matrix, projection_matrix, viewport_matrix)
+
+    for face in mesh.faces:
+        v0 = transformed_vertices[face[0]]
+        v1 = transformed_vertices[face[1]]
+        v2 = transformed_vertices[face[2]]
+
+        # Vérifier l'intersection
+        hit, intersection_point = ray_triangle_intersection(ray_origin, ray_dir, v0, v1, v2)
+        if hit:
+            print("hit")
+            # Mettre le triangle en surbrillance
+            pygame.draw.polygon(screen, (0, 255, 0), [(v0[0], v0[1]), (v1[0], v1[1]), (v2[0], v2[1])], 0)
+            
+            # Afficher les coordonnées du point d'intersection
+            intersection_text = f"Intersection: ({intersection_point[0]:.2f}, {intersection_point[1]:.2f}, {intersection_point[2]:.2f})"
+            text_surface = font.render(intersection_text, True, (255, 255, 255))
+            screen.blit(text_surface, (mouse_pos[0] + 10, mouse_pos[1] + 10))
+            break
+
+
 
 def calculate_normal(v0, v1, v2):
     edge1 = Subtraction(v1, 3, v0,3)
@@ -200,7 +274,7 @@ target_angleExp = 0
 
 
 camera_position = [0, 0, 0]
-camera_sensitivity = 0.03
+camera_sensitivity = 0.02
 movement_speed = 0.06
 
 v1 = [1, 0, 0]  
@@ -269,6 +343,7 @@ while running:
     cubeMesh.SetRotationMatrix(rotation)
     cubeMesh.modelMatrix(scale, translation)
     
+    mouse_pos = pygame.mouse.get_pos()
     mouse_dx, mouse_dy = pygame.mouse.get_rel()
     yaw = mouse_dx * camera_sensitivity
     # pitch = mouse_dy * camera_sensitivity
@@ -316,17 +391,14 @@ while running:
             animation_active_Exp = False
             t=0
 
-
-
-    
-
-
     # print(rotation_matrix3)
     # print("2" ,quaternions)
     
             
     render_wireframe(screen, cubeMesh,view_matrix, model_matrix, projection_matrix, viewport_matrix,light_direction)
     
+    highlight_triangle_and_show_coordinates(screen, cubeMesh, view_matrix, model_matrix, projection_matrix, viewport_matrix, mouse_pos)
+
     draw_world_axes(screen, view_matrix, projection_matrix, viewport_matrix)
 
     pygame.display.flip()

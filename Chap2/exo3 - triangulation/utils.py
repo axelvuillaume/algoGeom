@@ -41,9 +41,7 @@ def is_extrem_edge(dots, i, j):
 def sort_extrem_edges(edges):
     if not edges:
         return []
-
     sorted_edges = [edges.pop(0)]
-
 
     while edges:
         last_edge = sorted_edges[-1]
@@ -60,10 +58,7 @@ def sort_extrem_edges(edges):
 
     return sorted_edges
 
-
 def get_convex_hull_points(dots):
-
-
     extrem_edges = []
     
     for i in range(len(dots)):
@@ -72,7 +67,6 @@ def get_convex_hull_points(dots):
                 extrem_edges.append((i, j))
 
     sorted_edges = sort_extrem_edges(extrem_edges[:])
-
     convex_hull_dots = [dots[sorted_edges[0][0]]]
     for edge in sorted_edges:
         convex_hull_dots.append(dots[edge[1]])
@@ -93,7 +87,6 @@ def FindCircumcenter(A,B,C):
     # b1 = mid_AB + t*perpendicular_AB
     # b2 = mid_AC + t*perpendicular_AC  
     
-    # Résolution des équations
     A1 = perpendicular_AB[0]
     B1 = -perpendicular_AC[0]
     C1 = mid_AC[0] - mid_AB[0]
@@ -138,78 +131,73 @@ def detectIllegalEdge(triangle1, radius, center, listTriangle):
                             new_triangle1.selected =True
                             new_triangle2 = Triangle([common_points[1], unique_point1, unique_point2])
                             new_triangle2.selected = True
-                            
-                            
-    
-    
+
                             return triangle1,triangle, new_triangle1, new_triangle2
     return None,None,None,None
 
 
-                    
 def addVoronoiEdges(triangle1, listTriangle, voronoi_edges):
     centerT1 = FindCircumcenter(*triangle1.triangle_dots)
-    count = 0
+    shared_edges_count = 0
+    
     for triangle in listTriangle:
         if triangle != triangle1:
-
             common_points = list(set(triangle1.triangle_dots) & set(triangle.triangle_dots))
             
             if len(common_points) == 2:
                 centerT2 = FindCircumcenter(*triangle.triangle_dots)
-                count += 1
-                voronoi_edges.append((centerT1, centerT2))    
-    # print(count)
+                shared_edges_count += 1
+                voronoi_edges.append((centerT1, centerT2))
     
-    # edges = [
-    #     (triangle1.triangle_dots[0], triangle1.triangle_dots[1]),
-    #     (triangle1.triangle_dots[1], triangle1.triangle_dots[2]),
-    #     (triangle1.triangle_dots[2], triangle1.triangle_dots[0])
-    # ]
-    
-    # boundary_size=1000
-        
-    # if count == 2 :
-        # for edge in edges:
-        #     if not has_shared_edge(edge, listTriangle):  # Fonction pour détecter si l'arête est partagée
-        #         # Calculer le vecteur normal à l'arête
-        #         p1, p2 = edge
-        #         edge_vector = [p2.center[0] - p1.center[0], p2.center[1] - p1.center[1]]
-        #         normal_vector = [-edge_vector[1], edge_vector[0]]  # Perpendiculaire à l'arête
-                
-        #         # Normaliser le vecteur normal
-        #         # length = math.sqrt(normal_vector[0] ** 2 + normal_vector[1] ** 2)
-        #         # normal_vector = [normal_vector[0] / length, normal_vector[1] / length]
+    if shared_edges_count == 2:
+        for i in range(len(triangle1.triangle_dots)):
+            dot1 = triangle1.triangle_dots[i]
+            dot2 = triangle1.triangle_dots[(i + 1) % len(triangle1.triangle_dots)]
 
-        #         # Tracer la ligne infinie en prolongeant dans la direction du vecteur normal
-        #         point_far = [
-        #             centerT1[0] + normal_vector[0] * boundary_size,
-        #             centerT1[1] + normal_vector[1] * boundary_size
-        #         ]
-        #         voronoi_edges.append((centerT1, point_far))
+            is_shared = False
+            for triangle in listTriangle:
+                if triangle != triangle1:
+                    common_points = list(set([dot1, dot2]) & set(triangle.triangle_dots))
+                    if len(common_points) == 2:
+                        is_shared = True
+                        break
+            
+            # bord
+            if not is_shared:
+                dx = dot2.center[0] - dot1.center[0]
+                dy = dot2.center[1] - dot1.center[1]
+
+
+                normal = (-dy, dx)
+
+                center_to_dot1 = (dot1.center[0] - centerT1[0], dot1.center[1] - centerT1[1])
                 
                 
-def has_shared_edge(edge, listTriangle):
-    # L'arête est définie par deux points (p1, p2)
-    p1, p2 = edge
-
-    # Parcourir tous les triangles pour vérifier si l'arête est partagée
-    for triangle in listTriangle:
-        # Récupérer toutes les arêtes du triangle
-        edges = [
-            (triangle.triangle_dots[0], triangle.triangle_dots[1]),
-            (triangle.triangle_dots[1], triangle.triangle_dots[2]),
-            (triangle.triangle_dots[2], triangle.triangle_dots[0])
-        ]
-
-        # Vérifier si l'arête (p1, p2) existe dans le triangle
-        for e in edges:
-            # Les arêtes sont non orientées, donc on doit vérifier (p1, p2) et (p2, p1)
-            if (p1 == e[0] and p2 == e[1]) or (p1 == e[1] and p2 == e[0]):
-                return True
-
-    # Si aucune arête correspondante n'a été trouvée, alors elle n'est pas partagée
-    return False
+                dot_product = normal[0] * center_to_dot1[0] + normal[1] * center_to_dot1[1]
+                
+                
+                if dot_product < 0:
+                    normal = (-normal[0], -normal[1])
+                    
+                point_centerT1 = Dot((centerT1[0],centerT1[1]))
+                if not triangle1.is_inside(point_centerT1):
+                    is_in_another_triangle = False
+                    for triangle in listTriangle:
+                        if triangle != triangle1 and triangle.is_inside(point_centerT1):
+                            is_in_another_triangle = True
+                            break
+                    
+                    if not is_in_another_triangle:
+                        normal = (-normal[0], -normal[1])
+                
+                length = math.sqrt(normal[0] ** 2 + normal[1] ** 2)
+                if length != 0:
+                    normal = (normal[0] / length, normal[1] / length)
+            
+                normal_length = 300
+                end_point = (centerT1[0] + normal[0] * normal_length, centerT1[1] + normal[1] * normal_length)
+                
+                voronoi_edges.append((centerT1, end_point))
 
 
 def lowest_dot(dots):
@@ -223,11 +211,6 @@ def is_left(p1, p2, p3):
     return (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0])
 
 def jarvis_march(dots):
-    # Trouver le point le plus bas
-
-
-    # Test si p3 est à gauche du segment (p1, p2)
-
     hull = []
 
     start = lowest_dot(dots)
@@ -235,11 +218,9 @@ def jarvis_march(dots):
 
     while True:
         hull.append(point_on_hull)
-        # Sélectionner un point aléatoire pour commencer
         endpoint = dots[0] if dots[0] != point_on_hull else dots[1]
 
         for i in range(len(dots)):
-            # Si le point i est à gauche de la ligne courante, mettre à jour l'endpoint
             if is_left(point_on_hull.center, endpoint.center, dots[i].center) > 0:
                 endpoint = dots[i]
 
@@ -256,22 +237,19 @@ def cross_product(p1, p2, p3):
 def polar_angle_sort(points, start):
     def polar_angle(p):
         dx, dy = p.center[0] - start.center[0], p.center[1] - start.center[1]
-        return math.atan2(dy, dx)  # atan2 donne l'angle polaire
+        return math.atan2(dy, dx)
     return sorted(points, key=polar_angle)
 
 
+
 def graham_scan(dots):
-    # Trouver le point le plus bas (ou le plus à gauche en cas d'égalité)
-
-
-    # Initialisation
     start = lowest_dot(dots)
     sorted_dots = polar_angle_sort([dot for dot in dots if dot != start], start)
     hull = [start]
 
     for dot in sorted_dots:
         while len(hull) > 1 and cross_product(hull[-2].center, hull[-1].center, dot.center) <= 0:
-            hull.pop()  # Retire les points avec des virages à droite
+            hull.pop() 
         hull.append(dot)
 
     return hull
