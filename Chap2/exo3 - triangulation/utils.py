@@ -41,22 +41,34 @@ def is_extrem_edge(dots, i, j):
 def sort_extrem_edges(edges):
     if not edges:
         return []
-    sorted_edges = [edges.pop(0)]
-
+    
+    # Trouver l'arête avec le point de plus petite valeur (par exemple, en x ou y) pour démarrer
+    start_edge = min(edges, key=lambda edge: min(edge))
+    edges.remove(start_edge)
+    
+    # Vous voulez commencer avec le point de plus petite coordonnée pour démarrer la chaîne
+    sorted_edges = [start_edge]
+    
     while edges:
         last_edge = sorted_edges[-1]
-
+        
+        # Chercher l'arête qui continue la chaîne de l'enveloppe convexe
         for index, edge in enumerate(edges):
-            if edge[0] == last_edge[1]:  
+            if edge[0] == last_edge[1]:  # Le dernier point de l'arête actuelle correspond au premier point de la nouvelle arête
                 sorted_edges.append(edge)
                 edges.pop(index)
                 break
-            elif edge[1] == last_edge[1]:  
-                sorted_edges.append((edge[1], edge[0])) 
+            elif edge[1] == last_edge[1]:  # Si les points sont dans l'ordre inverse, il faut les inverser
+                sorted_edges.append((edge[1], edge[0]))  # Inverser l'ordre de l'arête
                 edges.pop(index)
                 break
+        else:
+            # Si aucun edge ne correspond à last_edge, c'est un problème : discontinuité
+            print("Erreur : Aucun edge ne correspond à la chaîne actuelle.")
+            break
 
     return sorted_edges
+
 
 def get_convex_hull_points(dots):
     extrem_edges = []
@@ -194,7 +206,7 @@ def addVoronoiEdges(triangle1, listTriangle, voronoi_edges):
                 if length != 0:
                     normal = (normal[0] / length, normal[1] / length)
             
-                normal_length = 300
+                normal_length = 30000
                 end_point = (centerT1[0] + normal[0] * normal_length, centerT1[1] + normal[1] * normal_length)
                 
                 voronoi_edges.append((centerT1, end_point))
