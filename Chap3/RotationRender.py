@@ -36,7 +36,6 @@ def getExponentialMap(matrix):
 
     
 def eulerToMatrix(alpha, beta, gamma):
-    # Matrices de rotation autour des axes X, Y et Z
     Rx = [
         [1, 0, 0, 0],
         [0, math.cos(alpha), -math.sin(alpha), 0],
@@ -165,20 +164,14 @@ def QuaternionToAcardanAngles(q):
 
     w, x, y, z = q
     
-    # Rotation around X-axis (theta_x)
     theta_x = math.atan2(2 * (w * x + y * z), 1 - 2 * (x**2 + y**2))
-    
-    # Rotation around Y-axis (theta_y)
     theta_y = math.asin(2 * (w * y - z * x))
-    
-    # Rotation around Z-axis (theta_z)
     theta_z = math.atan2(2 * (w * z + x * y), 1 - 2 * (y**2 + z**2))
     
     return [theta_x, theta_y, theta_z]
 
 
 def matrixToAcardanAngles(rotation_matrix):
-    # On récupère les composantes de la matrice de rotation 3x3
     r00 = rotation_matrix[0][0]
     r01 = rotation_matrix[0][1]
     r02 = rotation_matrix[0][2]

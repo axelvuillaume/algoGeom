@@ -114,7 +114,7 @@ def highlight_triangle_and_show_coordinates(screen, mesh, view_matrix, model_mat
     ray_dir = screen_to_world_ray(mouse_pos[0], mouse_pos[1], view_matrix, projection_matrix, viewport_matrix)
     ray_origin = camera_position
 
-    transformed_vertices = apply_transformations(mesh, view_matrix, model_matrix, projection_matrix, viewport_matrix)
+    transformed_vertices = mesh.transform(model_matrix)
 
     for face in mesh.faces:
         v0 = transformed_vertices[face[0]]
@@ -345,19 +345,21 @@ while running:
     
     mouse_pos = pygame.mouse.get_pos()
     mouse_dx, mouse_dy = pygame.mouse.get_rel()
-    yaw = mouse_dx * camera_sensitivity
-    # pitch = mouse_dy * camera_sensitivity
-
-    # Limiter le pitch pour éviter le retournement
-    pitch = max(-math.pi / 2, min(math.pi / 2, pitch))
-
-    yaw_axis = v2
-    pitch_axis = v1
     
-    v1 = rotate_vector(v1, yaw, yaw_axis) 
-    v3 = rotate_vector(v3, yaw, yaw_axis)
-    # v2 = rotate_vector(v2, pitch, pitch_axis) 
-    # v3 = rotate_vector(v3, pitch, pitch_axis)
+    if mode == "camera":
+        yaw = mouse_dx * camera_sensitivity
+        # pitch = mouse_dy * camera_sensitivity
+
+        # Limiter le pitch pour éviter le retournement
+        pitch = max(-math.pi / 2, min(math.pi / 2, pitch))
+
+        yaw_axis = v2
+        pitch_axis = v1
+        
+        v1 = rotate_vector(v1, yaw, yaw_axis) 
+        v3 = rotate_vector(v3, yaw, yaw_axis)
+        # v2 = rotate_vector(v2, pitch, pitch_axis) 
+        # v3 = rotate_vector(v3, pitch, pitch_axis)
 
 
     

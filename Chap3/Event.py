@@ -2,12 +2,6 @@ import pygame
 import math
 from VectorOperation.VectorOperation import *
 
-def move_camera(camera_position, direction, amount):
-    """Déplace la caméra dans une direction donnée (v1, v2, v3)"""
-    camera_position[0] += direction[0] * amount
-    camera_position[1] += direction[1] * amount
-    camera_position[2] += direction[2] * amount
-
 def rotate_vector(v, angle, axis):
     cos_angle = math.cos(angle)
     sin_angle = math.sin(angle)
@@ -66,3 +60,5 @@ def handle_object_controls(keys, rotation, translation):
         rotation[2] += vitesse_object
     if keys[pygame.K_KP5]:
         rotation[2] -= vitesse_object
+
+
